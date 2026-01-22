@@ -1,168 +1,202 @@
-# 철학사 로드맵 (PhilosophyRoadmap)
+# 문학 로드맵 (LiteratureRoadmap)
 
-> SwiftUI + Combine + MVVM 기반의 “철학자별 독서 로드맵 + 도서 검색” 앱  
-> (고대/중세/근대/19세기 등 철학자 노드 선택 → 단계별 추천 로드맵 + 관련 도서 검색 결과를 함께 제공)
+> SwiftUI + CoreData + MVVM 기반의 “문학 로드맵 + 도서 탐색/저장(캐싱)” 앱  
+> 읽고 싶은 작품/작가를 로드맵 형태로 정리하고, 마음에 드는 책을 **로컬에 저장(캐시)** 하여 오프라인에서도 관리할 수 있게 설계
 
 ---
 
 ## 1) 프로젝트 요약
 
 - **핵심 기능**
-  - 철학자(예: 플라톤/아리스토텔레스/아우구스티누스/아퀴나스/데카르트/칸트 등) 선택
-  - 철학자별 **3단계 로드맵(입문 → 심화 → 원전)** 템플릿 제공
-  - 선택 철학자와 연관된 도서를 **Aladin OpenAPI**로 검색 (페이지네이션/최대 N개)
-  - 결과 리스트에서 책 상세(Aladin 웹 페이지)로 이동
+  - 도서 검색/탐색(외부 API 또는 내부 데이터 소스)
+  - 결과를 “즐겨찾기(저장)”로 보관
+  - 즐겨찾기에 **폴더/태그/메모**를 붙여 개인화 관리
+  - 즐겨찾기 상세에서 편집/삭제, 폴더별 필터링
 
 - **기술 스택**
   - UI: **SwiftUI**
   - 상태/데이터흐름: **Combine + MVVM**
-  - 네트워킹: `URLSession` 기반 REST 호출
-  - 파싱: `Codable`
-  - 의존성: 경량(필요 최소) 원칙
+  - 로컬 저장/캐싱: **CoreData**
+    - `xcdatamodeld` 없이도 동작하도록 **코드로 NSManagedObjectModel 구성**(프로젝트 정책에 따라)
+  - 네트워킹: `URLSession` 기반(사용 시)
 
 ---
 
-## 2) 아키텍처 개요 (MVVM + Combine)
+## 2) 아키텍처 개요 (MVVM + Persistence)
 
 ### 레이어 책임
 - **Presentation (SwiftUI Views)**
-  - 화면 구성, 사용자 입력 이벤트 전달
-  - ViewModel의 `@Published` 상태를 구독해 렌더링
+  - 리스트/상세/편집 폼 UI
+  - ViewModel의 상태를 관찰해 렌더링
 
-- **ViewModel**
-  - 화면 상태(State) 보유 (`@Published`)
-  - 사용자 액션 → UseCase/Service 호출 → 결과를 UI State로 변환
-  - Combine로 비동기 흐름(로딩/에러/결과)을 단방향으로 정리
+- **ViewModel / Store**
+  - 화면 상태 + 사용자 이벤트 처리
+  - CoreData CRUD를 단일 진입점으로 감싸서 View의 관심사를 최소화
+  - 검색 결과(원격)와 저장 목록(로컬)을 “하나의 UX 흐름”으로 연결
 
-- **Domain (Model/UseCase)**
-  - `Philosopher`, `RoadmapTemplate`, `Step` 등 앱 도메인 규칙 보관
-  - “선택 철학자 → 로드맵 템플릿 생성/정리” 같은 규칙성 있는 로직 담당
-
-- **Data (API Client)**
-  - Aladin OpenAPI 호출
-  - DTO ↔ Domain 변환(매핑)
+- **Persistence (CoreData)**
+  - `PersistenceController`가 NSPersistentContainer 생성/관리
+  - 즐겨찾기 엔티티(`FavoriteBook`)를 중심으로 폴더/태그/메모 등 관리
 
 ---
 
 ## 3) 폴더/구조 예시
 
-> 실제 파일명은 프로젝트마다 다를 수 있으니, README의 목적은 “역할 기준” 구조를 제시하는 것입니다.
-
 ```
-PhilosophyRoadmap/
+LiteratureRoadmap/
   App/
-    PhilosophyRoadmapApp.swift
+    LiteratureRoadmapApp.swift
   Presentation/
     Views/
-      HomeView.swift                 // 철학자 노드/목록/탭 진입점
-      PhilosopherRoadmapView.swift   // 단계별 로드맵 + 검색결과 리스트
-      BookRowView.swift
-      BookDetailWebView.swift        // WKWebView 또는 SafariView
+      SearchView.swift               // 검색/탐색
+      SearchResultListView.swift
+      FavoritesView.swift            // 저장(캐시)된 목록
+      FavoriteDetailView.swift       // 폴더/태그/메모 편집 Form
     Components/
-      RoadmapStepCard.swift
-      LoadingView.swift
-      ErrorView.swift
+      BookRowView.swift
+      TagChipsView.swift
+      EmptyStateView.swift
   ViewModel/
-    PhilosopherSelectionViewModel.swift
-    BookSearchViewModel.swift
+    SearchViewModel.swift            // (원격/로컬) 검색 상태
+    FavoritesStore.swift             // 즐겨찾기 CRUD + 폴더 목록
   Domain/
     Models/
-      Philosopher.swift
-      RoadmapTemplate.swift
-      RoadmapStep.swift
-      Book.swift
-    Logic/
-      StepClassifier.swift           // 키워드 기반 단계 분류
+      Book.swift                     // 원격/로컬 공통 모델(가능하면)
   Data/
     Networking/
-      AladinAPIClient.swift
-      AladinRequest.swift
-      AladinResponseDTO.swift
+      BookAPIClient.swift            // 필요 시
+  Persistence/
+    PersistenceController.swift      // NSPersistentContainer/Context 제공
+    Model/
+      CoreDataModelBuilder.swift     // NSManagedObjectModel을 코드로 구성(선택)
+    Entities/
+      FavoriteBook+CoreDataClass.swift
+      FavoriteBook+CoreDataProperties.swift
 ```
+
+> `FavoritesStore` 같은 Store 객체를 “ViewModel 성격”으로 둬도 됩니다.  
+> 중요한 건 **View는 CoreData 세부를 몰라도 되게** 단일 진입점을 제공하는 것입니다.
 
 ---
 
-## 4) 통신 방식 (Aladin OpenAPI)
+## 4) 통신 방식 (원격 검색이 있는 경우)
 
 ### 흐름
-1. View에서 “철학자 선택/검색어 입력/페이지 이동” 이벤트 발생
-2. ViewModel이 `AladinAPIClient.search(...)` 호출
-3. `URLSession.dataTaskPublisher` → `decode(type:)` → Domain 모델로 매핑
-4. UI State 업데이트
-   - `isLoading = true/false`
-   - `items = [...]`
-   - `errorMessage = ...`
-
-### 예시(개념)
-- HTTP: GET
-- Query: `ttbkey`, `Query`, `QueryType`, `MaxResults`, `start`, `SearchTarget` 등
-- Response: `item[]` 배열(도서 메타데이터)
-
-> 실제 파라미터/필드는 Aladin OpenAPI 스펙을 따릅니다.  
-> 키는 저장소에 커밋하지 않고 로컬 설정(.xcconfig, Secret.plist 등)로 주입하는 것을 권장합니다.
+1. `SearchView`에서 검색어 입력
+2. `SearchViewModel`이 API Client 호출
+3. 결과를 `books: [Book]`로 노출
+4. 사용자가 “저장”을 누르면 `FavoritesStore.save(book:)` 실행
+5. 저장 목록 화면에서 즉시 반영(ObservedObject/FetchRequest/Publisher)
 
 ---
 
 ## 5) 뷰 구성
 
 ### 주요 화면
-- **HomeView**
-  - 시대/철학자 노드(또는 목록) 표시
-  - 선택 시 `PhilosopherRoadmapView`로 이동
+- **SearchView**
+  - 검색창 + 결과 리스트
+  - 각 Row에 “저장(즐겨찾기)” 액션 제공
 
-- **PhilosopherRoadmapView**
-  - 상단: 선택 철학자 소개 + 로드맵(3단계 카드)
-  - 하단: 관련 도서 검색 결과 리스트(표지/제목/저자/출판사/가격 등)
-  - 탭: “로드맵 / 검색결과” 또는 한 화면 내 섹션 구분
+- **FavoritesView**
+  - 로컬에 저장된 항목 리스트
+  - 폴더/태그 필터링(선택 사항)
+  - 정렬(최근 저장/제목/작가 등)
 
-- **BookDetailWebView**
-  - 항목 탭 → Aladin 상품 페이지로 이동(WKWebView 또는 SFSafariViewController)
+- **FavoriteDetailView**
+  - Form 기반 편집 UI
+  - 폴더 Picker, 태그 TextField, 메모 TextEditor
+  - 저장/닫기 툴바 액션
 
 ---
 
 ## 6) ViewModel 구성
 
-### 공통 패턴
-- `@Published var state` 혹은 `@Published` 여러 속성으로 구성
-- `private var cancellables = Set<AnyCancellable>()`
-- API 호출은 `sink(receiveCompletion:receiveValue:)`로 받되,
-  - 에러는 사용자 친화 메시지로 변환
-  - 로딩 상태는 `defer` 또는 `handleEvents`로 일관 처리
+### SearchViewModel (개념)
+- 입력
+  - `query: String`
+  - `page: Int`
+- 출력
+  - `books: [Book]`
+  - `isLoading: Bool`
+  - `errorMessage: String?`
+- 로직
+  - 디바운스(입력 과도 요청 방지)
+  - `switchToLatest`로 최신 검색만 반영
+  - 페이지네이션 시 기존 결과에 append
 
-### 예시 State (개념)
-- `selectedPhilosopher: Philosopher`
-- `roadmapSteps: [RoadmapStep]`
-- `query: String`
-- `books: [Book]`
-- `page: Int`, `hasNextPage: Bool`
-- `isLoading: Bool`
-- `alert: AlertState?`
-
----
-
-## 7) (중요) 상태 꼬임/스테일 이슈 방지 팁
-
-철학자 선택을 빠르게 연속으로 바꿀 때 “이전 요청 결과가 늦게 도착해서 현재 선택 상태를 덮어쓰는” 문제가 흔히 발생합니다.
-
-권장 방어 패턴:
-- **요청 토큰(requestId) / 선택 시점 snapshot**을 캡처하여,
-  - 응답 처리 시점에 **현재 선택 철학자와 동일할 때만** 결과 반영
-- 또는 Combine에서
-  - `queryPublisher.combineLatest(selectedPhilosopherPublisher)`
-  - `map` → `switchToLatest()`로 “최신 요청만 유지”
+### FavoritesStore (개념)
+- 출력
+  - `favorites: [FavoriteBookViewData]` 또는 FetchRequest 바인딩
+  - `folders: [String]`
+- 기능
+  - `save(book:)`
+  - `delete(favorite:)`
+  - `update(favoriteId:, folder:, tags:, memo:)`
+  - 폴더 목록 자동 생성/정규화(빈 값 처리)
 
 ---
 
-## 8) 실행/빌드
+## 7) 캐싱/저장 전략 (문학 로드맵 핵심)
 
-- iOS Deployment Target: 프로젝트 설정에 따름 (예: iOS 16+)
-- Xcode: 최신 안정 버전 권장
-- API Key/설정: 로컬 환경 주입
+문학 로드맵의 “캐싱”은 크게 3층으로 보면 좋습니다.
+
+### 7.1 1차 캐시: CoreData (영구 저장)
+- **대상**
+  - 사용자가 “저장”한 도서(즐겨찾기)
+  - 사용자 커스텀 필드: `folderName`, `tags`, `memo`
+  - 식별자: ISBN 또는 (title+author) 조합 등 “중복 방지 키”
+- **장점**
+  - 앱 종료/재실행 후에도 유지
+  - 오프라인에서도 목록/상세/편집 가능
+
+- **중복 저장 방지**
+  - 저장 시 먼저 동일 ISBN 존재 여부 조회
+  - 있으면 update, 없으면 insert
+
+- **성능**
+  - 목록 화면은 FetchRequest/NSFetchedResultsController 개념을 활용하거나,
+    Store에서 `NSFetchRequest`를 수행해 결과를 `@Published`로 노출
+
+### 7.2 2차 캐시: 이미지 캐시(선택)
+- 표지 이미지 URL이 있다면
+  - `NSCache<NSURL, UIImage>` 기반 캐시를 두고,
+  - SwiftUI `AsyncImage`를 커스터마이징해 동일 URL 재요청을 줄입니다.
+
+### 7.3 3차 캐시: URLCache(선택)
+- 원격 검색 API가 있고 반복 호출이 잦다면
+  - `URLSessionConfiguration.default.urlCache` 설정으로
+  - 동일 요청/응답을 단기간 캐시할 수 있습니다.
 
 ---
 
-## 9) 개선 아이디어
+## 8) CoreData 모델(코드 구성) 가이드
 
-- 검색결과 **이미지 캐시**(NSCache + AsyncImage 커스텀)
-- 철학자별 “즐겨찾기/내 로드맵” 저장(로컬 DB)
-- 오프라인 로드맵 열람(템플릿/메타데이터 로컬 번들)
+프로젝트 정책상 `.xcdatamodeld` 없이 구성한다면:
+
+- `NSManagedObjectModel()` 생성
+- `NSEntityDescription` / `NSAttributeDescription`로 엔티티/속성 정의
+- `NSPersistentContainer(name:managedObjectModel:)`로 컨테이너 생성
+- `loadPersistentStores` 완료 후 `viewContext.mergePolicy` 등 설정
+
+**주의 포인트**
+- AttributeType enum 케이스는 `NSInteger64AttributeType`처럼  
+  실제 Swift 케이스명이 SDK 변화에 따라 달라질 수 있어 컴파일 에러가 날 수 있습니다.
+- 마이그레이션이 필요해질 수 있으므로, 버전업 시에는
+  - 필드 추가/변경 전략(경량 마이그레이션 vs 수동)을 미리 정해두는 것이 좋습니다.
+
+---
+
+## 9) 실행/빌드
+
+- iOS Deployment Target: 예) iOS 16+
+- CoreData 저장소:
+  - 디바이스: App Sandbox 내 sqlite
+  - 테스트: inMemory 옵션(`/dev/null`) 지원 권장
+
+---
+
+## 10) 개선 아이디어
+
+- 폴더/태그를 별도 엔티티로 정규화 (검색/집계 성능 향상)
+- 즐겨찾기 export/import(JSON)로 백업
+- 검색결과와 즐겨찾기 동기화(저장 여부 표시)
