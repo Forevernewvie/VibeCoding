@@ -11,7 +11,7 @@ struct BookSearchRootView: View {
                 searchBar
 
                 if let msg = vm.errorMessage {
-                    Text("오류: \(msg)")
+                    Text("\(AppConfig.searchErrorPrefix)\(msg)")
                         .font(.footnote)
                         .foregroundStyle(.red)
                         .padding(.horizontal, 16)
@@ -36,7 +36,7 @@ struct BookSearchRootView: View {
                 }
                 .listStyle(.plain)
             }
-            .navigationTitle("도서 검색")
+            .navigationTitle(AppConfig.bookSearchTitle)
             .onChange(of: appState.pendingSearchQuery) { newValue in
                 guard let q = newValue else { return }
                 vm.query = q
@@ -49,7 +49,7 @@ struct BookSearchRootView: View {
 
     private var searchBar: some View {
         HStack(spacing: 10) {
-            TextField("책/저자/키워드 검색", text: $vm.query)
+            TextField(AppConfig.bookSearchPlaceholder, text: $vm.query)
                 .textFieldStyle(.roundedBorder)
                 .submitLabel(.search)
                 .onSubmit { vm.search(reset: true) }
@@ -75,7 +75,7 @@ struct BookRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            AsyncImage(url: URL(string: book.cover ?? "")) { phase in
+            AsyncImage(url: URL(string: book.cover ?? AppConfig.emptyCoverURL)) { phase in
                 switch phase {
                 case .empty:
                     RoundedRectangle(cornerRadius: 10)
@@ -96,22 +96,22 @@ struct BookRow: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                Text(book.title ?? "제목 없음")
+                Text(book.title ?? AppConfig.noTitle)
                     .font(.system(.headline, design: .rounded))
                     .lineLimit(2)
                 
-                Text([book.author, book.publisher].compactMap { $0 }.joined(separator: " · "))
+                Text([book.author, book.publisher].compactMap { $0 }.joined(separator: AppConfig.authorPublisherSeparator))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
 
                 if let isbn13 = book.isbn13, !isbn13.isEmpty {
-                    Text("ISBN13 \(isbn13)")
+                    Text("\(AppConfig.isbn13Prefix)\(isbn13)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 } else if let isbn = book.isbn, !isbn.isEmpty {
-                    Text("ISBN \(isbn)")
+                    Text("\(AppConfig.isbnPrefix)\(isbn)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -119,12 +119,12 @@ struct BookRow: View {
 
                 HStack(spacing: 10) {
                     if let standard = book.priceStandard {
-                        Text("정가 \(standard)원")
+                        Text("\(AppConfig.priceStandardPrefix)\(standard)\(AppConfig.priceSuffix)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                     if let sales = book.priceSales {
-                        Text("할인가 \(sales)원")
+                        Text("\(AppConfig.priceSalesPrefix)\(sales)\(AppConfig.priceSuffix)")
                             .font(.caption)
                             .foregroundStyle(.indigo)
                     }

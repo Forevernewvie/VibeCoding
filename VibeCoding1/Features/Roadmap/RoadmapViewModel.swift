@@ -24,8 +24,8 @@ final class RoadmapViewModel: ObservableObject {
     private var refreshCancellable: AnyCancellable?
 
     // 확장 추천을 위해 베스트셀러를 몇 페이지 스캔할지
-    private let bestsellerPagesToScan = 6
-    private let pageSize = 50
+    private let bestsellerPagesToScan = AppConfig.bestsellerPagesToScan
+    private let pageSize = AppConfig.aladinPageSize
 
     init(api: AladinServicing = AladinAPI()) {
         self.api = api
@@ -124,17 +124,17 @@ final class RoadmapViewModel: ObservableObject {
         let q2 = curated.title
         let q3 = curated.author
 
-        return api.fetch(.itemSearch(query: q1, queryType: "Keyword", start: 1, maxResults: 30))
+        return api.fetch(.itemSearch(query: q1, queryType: AppConfig.aladinQueryTypeKeyword, start: 1, maxResults: AppConfig.aladinMaxResults))
             .map { self.pickBestMatch(from: $0.item ?? [], curated: curated) }
             .flatMap { match -> AnyPublisher<BookItem?, Error> in
                 if match != nil { return Just(match).setFailureType(to: Error.self).eraseToAnyPublisher() }
 
-                return self.api.fetch(.itemSearch(query: q2, queryType: "Title", start: 1, maxResults: 30))
+                return self.api.fetch(.itemSearch(query: q2, queryType: AppConfig.aladinQueryTypeTitle, start: 1, maxResults: AppConfig.aladinMaxResults))
                     .map { self.pickBestMatch(from: $0.item ?? [], curated: curated) }
                     .flatMap { match2 -> AnyPublisher<BookItem?, Error> in
                         if match2 != nil { return Just(match2).setFailureType(to: Error.self).eraseToAnyPublisher() }
 
-                        return self.api.fetch(.itemSearch(query: q3, queryType: "Author", start: 1, maxResults: 30))
+                        return self.api.fetch(.itemSearch(query: q3, queryType: AppConfig.aladinQueryTypeAuthor, start: 1, maxResults: AppConfig.aladinMaxResults))
                             .map { self.pickBestMatch(from: $0.item ?? [], curated: curated) }
                             .eraseToAnyPublisher()
                     }
@@ -150,32 +150,32 @@ final class RoadmapViewModel: ObservableObject {
         let wantedAuthor = normalize(curated.author)
 
         func score(_ b: BookItem) -> Int {
-            let t = normalize(b.title ?? "")
-            let a = normalize(b.author ?? "")
+            let t = normalize(b.title ?? AppConfig.emptyString)
+            let a = normalize(b.author ?? AppConfig.emptyString)
 
             var s = 0
-            if wantedTitles.contains(where: { t.contains($0) || $0.contains(t) }) { s += 5 }
-            if !wantedAuthor.isEmpty, a.contains(wantedAuthor) { s += 3 }
-            if (b.isbn13 ?? "").count == 13 { s += 1 }
-            if (b.cover ?? "").isEmpty == false { s += 1 }
+            if wantedTitles.contains(where: { t.contains($0) || $0.contains(t) }) { s += AppConfig.scoreTitleMatch }
+            if !wantedAuthor.isEmpty, a.contains(wantedAuthor) { s += AppConfig.scoreAuthorMatch }
+            if (b.isbn13 ?? AppConfig.emptyString).count == 13 { s += AppConfig.scoreIsbnCoverMatch }
+            if (b.cover ?? AppConfig.emptyString).isEmpty == false { s += AppConfig.scoreIsbnCoverMatch }
             return s
         }
 
         return items
             .map { ($0, score($0)) }
             .sorted { $0.1 > $1.1 }
-            .first(where: { $0.1 >= 5 })?.0
+            .first(where: { $0.1 >= AppConfig.bestMatchScoreThreshold })?.0
     }
 
     private func normalize(_ s: String) -> String {
         s.lowercased()
-            .replacingOccurrences(of: " ", with: "")
-            .replacingOccurrences(of: "·", with: "")
-            .replacingOccurrences(of: ":", with: "")
-            .replacingOccurrences(of: "—", with: "")
-            .replacingOccurrences(of: "-", with: "")
-            .replacingOccurrences(of: "(", with: "")
-            .replacingOccurrences(of: ")", with: "")
+            .replacingOccurrences(of: AppConfig.normalizeSpace, with: AppConfig.emptyString)
+            .replacingOccurrences(of: AppConfig.normalizeDot, with: AppConfig.emptyString)
+            .replacingOccurrences(of: AppConfig.normalizeColon, with: AppConfig.emptyString)
+            .replacingOccurrences(of: AppConfig.normalizeDashLong, with: AppConfig.emptyString)
+            .replacingOccurrences(of: AppConfig.normalizeDashShort, with: AppConfig.emptyString)
+            .replacingOccurrences(of: AppConfig.normalizeParenthesisOpen, with: AppConfig.emptyString)
+            .replacingOccurrences(of: AppConfig.normalizeParenthesisClose, with: AppConfig.emptyString)
     }
 
     private func assignCuratedToSteps(_ resolved: [CuratedResolvedBook]) {
@@ -212,8 +212,8 @@ final class RoadmapViewModel: ObservableObject {
                 let filtered = self.filterBestsellers(items: allItems, philosopher: philosopher)
 
                 return filtered.filter { b in
-                    let t = self.normalize(b.title ?? "")
-                    let isbn = self.normalize(b.isbn13 ?? b.isbn ?? "")
+                    let t = self.normalize(b.title ?? AppConfig.emptyString)
+                    let isbn = self.normalize(b.isbn13 ?? b.isbn ?? AppConfig.emptyString)
                     if curatedTitleKeys.contains(t) { return false }
                     if !isbn.isEmpty, curatedIsbnKeys.contains(isbn) { return false }
                     return true
@@ -237,7 +237,7 @@ final class RoadmapViewModel: ObservableObject {
 
         func haystack(_ b: BookItem) -> String {
             let parts = [b.author, b.title, b.description].compactMap { $0 }
-            return parts.joined(separator: " ").lowercased()
+            return parts.joined(separator: AppConfig.normalizeSpace).lowercased()
         }
 
         var out: [BookItem] = []
@@ -246,7 +246,7 @@ final class RoadmapViewModel: ObservableObject {
             if tokens.contains(where: { h.contains($0.lowercased()) }) {
                 out.append(b)
             }
-            if out.count >= 24 { break } // 확장 추천은 적당히
+            if out.count >= AppConfig.extendedRecommendationLimit { break } // 확장 추천은 적당히
         }
         return out
     }
@@ -257,7 +257,7 @@ final class RoadmapViewModel: ObservableObject {
             let idx = StepClassifier.classify(book: b, philosopher: philosopher)
             buckets[idx].append(b)
         }
-        let limitPerStep = 10
+        let limitPerStep = AppConfig.limitPerStep
         return buckets.map { Array($0.prefix(limitPerStep)) }
     }
 }

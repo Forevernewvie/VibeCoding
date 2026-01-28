@@ -10,8 +10,8 @@ enum AladinEndpoint {
 
     var path: String {
         switch self {
-        case .itemSearch: return "ItemSearch.aspx"
-        case .itemListBestseller: return "ItemList.aspx"
+        case .itemSearch: return AppConfig.aladinPathItemSearch
+        case .itemListBestseller: return AppConfig.aladinPathItemList
         }
     }
 
@@ -19,34 +19,34 @@ enum AladinEndpoint {
         // 프록시 모드에서는 /aladin/<path>?... 형태로 통일
         // (Node/Worker 샘플도 동일)
         let base = AppConfig.baseURL
-        let fullBase = AppConfig.useProxy ? base.appendingPathComponent("aladin").appendingPathComponent(path)
+        let fullBase = AppConfig.useProxy ? base.appendingPathComponent(AppConfig.aladinProxyPrefix).appendingPathComponent(path)
                                          : base.appendingPathComponent(path)
 
         var comps = URLComponents(url: fullBase, resolvingAgainstBaseURL: false)!
         var q: [URLQueryItem] = []
 
         // 공통
-        q.append(.init(name: "output", value: AppConfig.output))
-        q.append(.init(name: "Version", value: AppConfig.apiVersion))
+        q.append(.init(name: AppConfig.aladinQueryItemOutput, value: AppConfig.output))
+        q.append(.init(name: AppConfig.aladinQueryItemVersion, value: AppConfig.apiVersion))
 
         // 원본 알라딘 직접 호출 시만 key 포함
         if !AppConfig.useProxy {
-            q.append(.init(name: "ttbkey", value: AppConfig.ttbKeyForDev))
+            q.append(.init(name: AppConfig.aladinQueryItemTtbKey, value: AppConfig.ttbKeyForDev))
         }
 
         switch self {
         case let .itemSearch(query, queryType, start, maxResults):
-            q.append(.init(name: "Query", value: query))
-            q.append(.init(name: "QueryType", value: queryType))      // Title / Author / Keyword / ISBN ...
-            q.append(.init(name: "SearchTarget", value: "Book"))
-            q.append(.init(name: "start", value: String(start)))      // 페이지 (1부터)
-            q.append(.init(name: "MaxResults", value: String(maxResults)))
+            q.append(.init(name: AppConfig.aladinQueryItemQuery, value: query))
+            q.append(.init(name: AppConfig.aladinQueryItemQueryType, value: queryType))
+            q.append(.init(name: AppConfig.aladinQueryItemSearchTarget, value: AppConfig.aladinSearchTargetBook))
+            q.append(.init(name: AppConfig.aladinQueryItemStart, value: String(start)))
+            q.append(.init(name: AppConfig.aladinQueryItemMaxResults, value: String(maxResults)))
 
         case let .itemListBestseller(start, maxResults):
-            q.append(.init(name: "QueryType", value: "Bestseller"))
-            q.append(.init(name: "SearchTarget", value: "Book"))
-            q.append(.init(name: "start", value: String(start)))
-            q.append(.init(name: "MaxResults", value: String(maxResults)))
+            q.append(.init(name: AppConfig.aladinQueryItemQueryType, value: AppConfig.aladinQueryTypeBestseller))
+            q.append(.init(name: AppConfig.aladinQueryItemSearchTarget, value: AppConfig.aladinSearchTargetBook))
+            q.append(.init(name: AppConfig.aladinQueryItemStart, value: String(start)))
+            q.append(.init(name: AppConfig.aladinQueryItemMaxResults, value: String(maxResults)))
         }
 
         comps.queryItems = q

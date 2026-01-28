@@ -25,11 +25,11 @@ struct SplashView: View {
                         .foregroundStyle(.white)
                 }
 
-                Text("철학사 로드맵")
+                Text(AppConfig.splashTitle)
                     .font(.system(.title2, design: .serif).weight(.semibold))
                     .foregroundStyle(.white)
 
-                Text("고대에서 근대까지")
+                Text(AppConfig.splashSubtitle)
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(.white.opacity(0.75))
             }

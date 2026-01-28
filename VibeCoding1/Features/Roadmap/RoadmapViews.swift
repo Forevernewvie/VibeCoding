@@ -19,7 +19,7 @@ struct RoadmapRootView: View {
                 .padding(.bottom, 24)
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("철학사 로드맵")
+            .navigationTitle(AppConfig.roadmapNavigationTitle)
         }
         .onAppear {
             if let first = vm.steps.first { expandedStepIDs.insert(first.id) }
@@ -28,16 +28,16 @@ struct RoadmapRootView: View {
 
     private var headerCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("고대 → 중세 -> 근대 -> 19세기")
+            Text(AppConfig.roadmapHeaderTitle)
                 .font(.system(.title2, design: .serif).weight(.semibold))
 
-            Text("추천은 ‘정답 로드맵(필독)’을 먼저 깔고, 알라딘은 표지/가격/링크를 보강합니다.")
+            Text(AppConfig.roadmapHeaderSubtitle)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 8) {
-                Label("필독 추천", systemImage: "checkmark.seal")
-                Label("확장 읽기", systemImage: "sparkles")
+                Label(AppConfig.curatedRecommendation, systemImage: "checkmark.seal")
+                Label(AppConfig.extendedReading, systemImage: "sparkles")
                 Spacer()
                 if vm.isLoading { ProgressView().scaleEffect(0.9) }
             }
@@ -52,19 +52,19 @@ struct RoadmapRootView: View {
 
     private var philosopherPicker: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("철학자")
+            Text(AppConfig.philosopherTitle)
                 .font(.headline)
 
-            let ancient = Philosopher.allCases.filter { $0.era == "고대 철학" }
-            let medieval = Philosopher.allCases.filter { $0.era == "중세 철학" }
-            let modern = Philosopher.allCases.filter { $0.era == "근대 철학" }
-            let nineteenth = Philosopher.allCases.filter { $0.era == "19세기 철학" }
+            let ancient = Philosopher.allCases.filter { $0.era == AppConfig.eraAncientPhilosophy }
+            let medieval = Philosopher.allCases.filter { $0.era == AppConfig.eraMedievalPhilosophy }
+            let modern = Philosopher.allCases.filter { $0.era == AppConfig.eraModernPhilosophy }
+            let nineteenth = Philosopher.allCases.filter { $0.era == AppConfig.eraNineteenthPhilosophy }
 
             VStack(spacing: 10) {
-                groupRow(title: "고대", items: ancient)
-                groupRow(title: "중세", items: medieval)
-                groupRow(title: "근대", items: modern)
-                groupRow(title: "19세기", items: nineteenth)
+                groupRow(title: AppConfig.eraAncient, items: ancient)
+                groupRow(title: AppConfig.eraMedieval, items: medieval)
+                groupRow(title: AppConfig.eraModern, items: modern)
+                groupRow(title: AppConfig.eraNineteenth, items: nineteenth)
             }
         }
         .padding(14)
@@ -112,11 +112,11 @@ struct RoadmapRootView: View {
     private var roadmapTimeline: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("\(vm.selected.rawValue) 로드맵")
+                Text("\(vm.selected.rawValue)\(AppConfig.roadmapSuffix)")
                     .font(.headline)
                 Spacer()
                 if let msg = vm.errorMessage {
-                    Text("오류")
+                    Text(AppConfig.errorText)
                         .font(.caption)
                         .foregroundStyle(.red)
                         .help(msg)
@@ -137,50 +137,50 @@ struct RoadmapRootView: View {
         let base = vm.selected.authorQuery
         switch vm.selected {
         case .plato:
-            return base + " " + (stepIndex == 0 ? "대화편" : stepIndex == 1 ? "국가" : "티마이오스")
+            return base + " " + (stepIndex == 0 ? AppConfig.platoDialogue : stepIndex == 1 ? AppConfig.platoRepublic : AppConfig.platoTimaeus)
         case .aristotle:
-            return base + " " + (stepIndex == 0 ? "윤리" : stepIndex == 1 ? "논리" : "형이상학")
+            return base + " " + (stepIndex == 0 ? AppConfig.aristotleEthics : stepIndex == 1 ? AppConfig.aristotleLogic : AppConfig.aristotleMetaphysics)
         case .augustine:
-            return base + " " + (stepIndex == 0 ? "고백록" : stepIndex == 1 ? "신국론" : "삼위일체")
+            return base + " " + (stepIndex == 0 ? AppConfig.augustineConfessions : stepIndex == 1 ? AppConfig.augustineCityOfGod : AppConfig.augustineTrinity)
         case .anselm:
-            return base + " " + (stepIndex == 0 ? "프로슬로기온" : stepIndex == 1 ? "존재논증" : "Cur Deus Homo")
+            return base + " " + (stepIndex == 0 ? AppConfig.anselmProslogion : stepIndex == 1 ? AppConfig.anselmOntologicalArgument : AppConfig.anselmCurDeusHomo)
         case .aquinas:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "신학대전" : "주석")
+            return base + " " + (stepIndex == 0 ? AppConfig.aquinasIntroduction : stepIndex == 1 ? AppConfig.aquinasSummaTheologica : AppConfig.aquinasCommentary)
 
         case .boethius:
-            return base + " " + (stepIndex == 0 ? "철학의 위안" : stepIndex == 1 ? "신학" : "선집")
+            return base + " " + (stepIndex == 0 ? AppConfig.boethiusConsolation : stepIndex == 1 ? AppConfig.boethiusTheology : AppConfig.boethiusAnthology)
         case .avicenna:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "형이상학" : "치유의 서")
+            return base + " " + (stepIndex == 0 ? AppConfig.avicennaIntroduction : stepIndex == 1 ? AppConfig.avicennaMetaphysics : AppConfig.avicennaBookOfHealing)
         case .averroes:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "주석" : "아리스토텔레스")
+            return base + " " + (stepIndex == 0 ? AppConfig.averroesIntroduction : stepIndex == 1 ? AppConfig.averroesCommentary : AppConfig.averroesAristotle)
         case .dunsScotus:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "형이상학" : "강해")
+            return base + " " + (stepIndex == 0 ? AppConfig.dunsScotusIntroduction : stepIndex == 1 ? AppConfig.dunsScotusMetaphysics : AppConfig.dunsScotusLectures)
         case .ockham:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "논리학" : "명목론")
+            return base + " " + (stepIndex == 0 ? AppConfig.ockhamIntroduction : stepIndex == 1 ? AppConfig.ockhamLogic : AppConfig.ockhamNominalism)
 
         case .descartes:
-            return base + " " + (stepIndex == 0 ? "방법서설" : stepIndex == 1 ? "성찰" : "정념론")
+            return base + " " + (stepIndex == 0 ? AppConfig.descartesDiscourse : stepIndex == 1 ? AppConfig.descartesMeditations : AppConfig.descartesPassions)
         case .spinoza:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "윤리학" : "신학정치론")
+            return base + " " + (stepIndex == 0 ? AppConfig.spinozaIntroduction : stepIndex == 1 ? AppConfig.spinozaEthics : AppConfig.spinozaTheologicoPolitical)
         case .locke:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "인간오성" : "정부론")
+            return base + " " + (stepIndex == 0 ? AppConfig.lockeIntroduction : stepIndex == 1 ? AppConfig.lockeHumanUnderstanding : AppConfig.lockeGovernment)
         case .leibniz:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "단자론" : "신정론")
+            return base + " " + (stepIndex == 0 ? AppConfig.leibnizIntroduction : stepIndex == 1 ? AppConfig.leibnizMonadology : AppConfig.leibnizTheodicy)
         case .hume:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "인성론" : "탐구")
+            return base + " " + (stepIndex == 0 ? AppConfig.humeIntroduction : stepIndex == 1 ? AppConfig.humeHumanNature : AppConfig.humeEnquiry)
         case .rousseau:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "사회계약론" : "에밀")
+            return base + " " + (stepIndex == 0 ? AppConfig.rousseauIntroduction : stepIndex == 1 ? AppConfig.rousseauSocialContract : AppConfig.rousseauEmile)
         case .kant:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "순수이성비판" : "실천이성비판")
+            return base + " " + (stepIndex == 0 ? AppConfig.kantIntroduction : stepIndex == 1 ? AppConfig.kantPureReason : AppConfig.kantPracticalReason)
 
         case .marx:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "공산당 선언" : "자본")
+            return base + " " + (stepIndex == 0 ? AppConfig.marxIntroduction : stepIndex == 1 ? AppConfig.marxCommunistManifesto : AppConfig.marxCapital)
         case .hegel:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "정신현상학" : "법철학")
+            return base + " " + (stepIndex == 0 ? AppConfig.hegelIntroduction : stepIndex == 1 ? AppConfig.hegelPhenomenology : AppConfig.hegelPhilosophyOfRight)
         case .nietzsche:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "차라투스트라" : "도덕의 계보")
+            return base + " " + (stepIndex == 0 ? AppConfig.nietzscheIntroduction : stepIndex == 1 ? AppConfig.nietzscheZarathustra : AppConfig.nietzscheGenealogyOfMorality)
         case .kierkegaard:
-            return base + " " + (stepIndex == 0 ? "입문" : stepIndex == 1 ? "죽음에 이르는 병" : "불안의 개념")
+            return base + " " + (stepIndex == 0 ? AppConfig.kierkegaardIntroduction : stepIndex == 1 ? AppConfig.kierkegaardSicknessUntoDeath : AppConfig.kierkegaardConceptOfAnxiety)
         }
     }
 
@@ -220,7 +220,7 @@ struct RoadmapRootView: View {
                     VStack(alignment: .leading, spacing: 14) {
                         // 필독 추천(큐레이션) — 항상 존재
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("필독 추천")
+                            Text(AppConfig.curatedRecommendation)
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.secondary)
 
@@ -232,7 +232,7 @@ struct RoadmapRootView: View {
                         // 확장 읽기(베스트셀러) — 존재할 때만
                         if !extended.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("확장 읽기")
+                                Text(AppConfig.extendedReading)
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(.secondary)
 
@@ -241,7 +241,7 @@ struct RoadmapRootView: View {
                                         Link(destination: url) {
                                             HStack(spacing: 10) {
                                                 VStack(alignment: .leading, spacing: 3) {
-                                                    Text(book.title ?? "제목 없음")
+                                                    Text(book.title ?? AppConfig.noTitle)
                                                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
                                                         .foregroundStyle(.primary)
                                                         .lineLimit(2)
@@ -271,7 +271,7 @@ struct RoadmapRootView: View {
                         } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "magnifyingglass")
-                                Text("검색에서 더보기")
+                                Text(AppConfig.searchMoreText)
                             }
                             .font(.caption.weight(.semibold))
                             .padding(.vertical, 10)
@@ -284,9 +284,9 @@ struct RoadmapRootView: View {
                     .padding(.top, 6)
                 } label: {
                     HStack {
-                        Text("펼쳐보기")
+                        Text(AppConfig.expandText)
                         Spacer()
-                        Text("필독 \(curated.count) · 확장 \(extended.count)")
+                        Text("\(AppConfig.curatedCountPrefix)\(curated.count)\(AppConfig.extendedCountPrefix)\(extended.count)")
                             .foregroundStyle(.secondary)
                     }
                     .font(.subheadline)
@@ -356,7 +356,7 @@ private struct CuratedRow: View {
                     .lineLimit(3)
 
                 if let sales = b.priceSales {
-                    Text("할인가 \(sales)원")
+                    Text("\(AppConfig.priceSalesPrefix)\(sales)\(AppConfig.priceSuffix)")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.indigo)
                 }

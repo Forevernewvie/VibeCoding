@@ -35,14 +35,14 @@ enum Philosopher: String, CaseIterable, Identifiable {
     var era: String {
         switch self {
         case .plato, .aristotle:
-            return "고대 철학"
+            return AppConfig.eraAncientPhilosophyString
         case .augustine, .anselm, .aquinas, .avicenna, .averroes, .boethius, .dunsScotus, .ockham:
-            return "중세 철학"
+            return AppConfig.eraMedievalPhilosophyString
         case .descartes, .spinoza, .locke, .leibniz, .hume, .rousseau, .kant:
             // 흄/루소/칸트는 18세기지만 보통 근대 계열로 묶어 학습 로드맵에 넣기 좋음
-            return "근대 철학"
+            return AppConfig.eraModernPhilosophyString
         case .marx, .hegel, .nietzsche, .kierkegaard:
-            return "19세기 철학"
+            return AppConfig.eraNineteenthPhilosophyString
         }
     }
 
@@ -144,75 +144,75 @@ enum RoadmapTemplate {
         // Ancient
         case .plato:
             return [
-                .init(title: "STEP 1", subtitle: "짧은 대화편으로 진입"),
-                .init(title: "STEP 2", subtitle: "핵심: 국가·향연"),
-                .init(title: "STEP 3", subtitle: "심화: 티마이오스·법률")
+                .init(title: AppConfig.step1Title, subtitle: AppConfig.step1SubtitleIntro),
+                .init(title: AppConfig.step2Title, subtitle: AppConfig.step2SubtitleCore),
+                .init(title: AppConfig.step3Title, subtitle: AppConfig.step3SubtitleAdvanced)
             ]
         case .aristotle:
             return [
-                .init(title: "STEP 1", subtitle: "윤리·정치로 감각 잡기"),
-                .init(title: "STEP 2", subtitle: "논리(오르가논)로 문법 만들기"),
-                .init(title: "STEP 3", subtitle: "형이상학·자연학으로 본령")
+                .init(title: AppConfig.step1Title, subtitle: AppConfig.step1SubtitleEthicsPolitics),
+                .init(title: AppConfig.step2Title, subtitle: AppConfig.step2SubtitleLogic),
+                .init(title: AppConfig.step3Title, subtitle: AppConfig.step3SubtitleMetaphysics)
             ]
 
         // Medieval (expanded)
         case .augustine:
             return [
-                .init(title: "STEP 1", subtitle: "내면 성찰로 진입"),
-                .init(title: "STEP 2", subtitle: "역사·정치·신학의 틀"),
-                .init(title: "STEP 3", subtitle: "형이상학/신학 심화")
+                .init(title: AppConfig.step1Title, subtitle: AppConfig.step1SubtitleInnerReflection),
+                .init(title: AppConfig.step2Title, subtitle: AppConfig.step2SubtitleHistoryPoliticsTheology),
+                .init(title: AppConfig.step3Title, subtitle: AppConfig.step3SubtitleMetaphysicsTheologyAdvanced)
             ]
         case .anselm:
             return [
-                .init(title: "STEP 1", subtitle: "짧은 논증 텍스트로 진입"),
-                .init(title: "STEP 2", subtitle: "신 존재 논증 핵심"),
-                .init(title: "STEP 3", subtitle: "속죄·스콜라 논쟁 심화")
+                .init(title: AppConfig.step1Title, subtitle: AppConfig.step1SubtitleShortArguments),
+                .init(title: AppConfig.step2Title, subtitle: AppConfig.step2SubtitleOntologicalArgumentCore),
+                .init(title: AppConfig.step3Title, subtitle: AppConfig.step3SubtitleAtonementScholasticAdvanced)
             ]
         case .aquinas:
             return [
-                .init(title: "STEP 1", subtitle: "입문서로 지도 만들기"),
-                .init(title: "STEP 2", subtitle: "신학대전/핵심 논점"),
-                .init(title: "STEP 3", subtitle: "주석·형이상학 심화")
+                .init(title: AppConfig.step1Title, subtitle: AppConfig.step1SubtitleIntroductionMap),
+                .init(title: AppConfig.step2Title, subtitle: AppConfig.step2SubtitleSummaTheologicaCore),
+                .init(title: AppConfig.step3Title, subtitle: AppConfig.step3SubtitleCommentaryMetaphysicsAdvanced)
             ]
         case .boethius, .avicenna, .averroes, .dunsScotus, .ockham:
             return [
-                .init(title: "STEP 1", subtitle: "핵심 텍스트/개론으로 진입"),
-                .init(title: "STEP 2", subtitle: "주요 논점(존재·인식·신)"),
-                .init(title: "STEP 3", subtitle: "스콜라 논쟁/주석 심화")
+                .init(title: AppConfig.step1Title, subtitle: AppConfig.step1SubtitleKeyConceptsIntro),
+                .init(title: AppConfig.step2Title, subtitle: AppConfig.step2SubtitleMainPoints),
+                .init(title: AppConfig.step3Title, subtitle: AppConfig.step3SubtitleScholasticDebateAdvanced)
             ]
 
         // Modern
         case .descartes:
             return [
-                .init(title: "STEP 1", subtitle: "방법·자아로 진입"),
-                .init(title: "STEP 2", subtitle: "인식론·형이상학 핵심"),
-                .init(title: "STEP 3", subtitle: "정념/과학적 세계관까지 확장")
+                .init(title: AppConfig.step1Title, subtitle: AppConfig.step1SubtitleMethodSelfIntro),
+                .init(title: AppConfig.step2Title, subtitle: AppConfig.step2SubtitleEpistemologyMetaphysicsCore),
+                .init(title: AppConfig.step3Title, subtitle: AppConfig.step3SubtitlePassionsScientificWorldview)
             ]
         case .spinoza:
             return [
-                .init(title: "STEP 1", subtitle: "사상 지도(일원론) 만들기"),
-                .init(title: "STEP 2", subtitle: "윤리학 핵심 정리"),
-                .init(title: "STEP 3", subtitle: "정치·신학 논쟁까지 확장")
+                .init(title: AppConfig.step1Title, subtitle: AppConfig.step1SubtitleMonismMap),
+                .init(title: AppConfig.step2Title, subtitle: AppConfig.step2SubtitleEthicsCore),
+                .init(title: AppConfig.step3Title, subtitle: AppConfig.step3SubtitlePoliticsTheologyAdvanced)
             ]
         case .locke, .leibniz, .hume, .rousseau, .kant:
             return [
-                .init(title: "STEP 1", subtitle: "입문/핵심 텍스트로 진입"),
-                .init(title: "STEP 2", subtitle: "대표 저작 1권 완독"),
-                .init(title: "STEP 3", subtitle: "심화 텍스트/해설 병행")
+                .init(title: AppConfig.step1Title, subtitle: AppConfig.step1SubtitleIntroCoreTexts),
+                .init(title: AppConfig.step2Title, subtitle: AppConfig.step2SubtitleReadOneMajorWork),
+                .init(title: AppConfig.step3Title, subtitle: AppConfig.step3SubtitleAdvancedTextsCommentary)
             ]
 
         // 19th
         case .marx:
             return [
-                .init(title: "STEP 1", subtitle: "문제의식(사회·역사) 진입"),
-                .init(title: "STEP 2", subtitle: "핵심 논문/선언"),
-                .init(title: "STEP 3", subtitle: "자본/정치경제학 심화")
+                .init(title: AppConfig.step1Title, subtitle: AppConfig.step1SubtitleSocialHistoryIntro),
+                .init(title: AppConfig.step2Title, subtitle: AppConfig.step2SubtitleCoreEssaysManifesto),
+                .init(title: AppConfig.step3Title, subtitle: AppConfig.step3SubtitleCapitalPoliticalEconomyAdvanced)
             ]
         case .hegel, .nietzsche, .kierkegaard:
             return [
-                .init(title: "STEP 1", subtitle: "입문서로 지도 만들기"),
-                .init(title: "STEP 2", subtitle: "대표 저작 1권 완독"),
-                .init(title: "STEP 3", subtitle: "강의/해설 병행 심화")
+                .init(title: AppConfig.step1Title, subtitle: AppConfig.step1SubtitleIntroductoryMap),
+                .init(title: AppConfig.step2Title, subtitle: AppConfig.step2SubtitleReadOneRepresentativeWork),
+                .init(title: AppConfig.step3Title, subtitle: AppConfig.step3SubtitleLecturesCommentaryAdvanced)
             ]
         }
     }

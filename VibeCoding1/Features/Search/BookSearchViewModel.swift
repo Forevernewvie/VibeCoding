@@ -3,7 +3,7 @@ import Combine
 
 @MainActor
 final class BookSearchViewModel: ObservableObject {
-    @Published var query: String = ""
+    @Published var query: String = AppConfig.defaultQuery
     @Published var results: [BookItem] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
@@ -35,7 +35,7 @@ final class BookSearchViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
-        api.fetch(.itemSearch(query: trimmed, queryType: "Keyword", start: currentPage, maxResults: 30))
+        api.fetch(.itemSearch(query: trimmed, queryType: AppConfig.aladinQueryTypeKeyword, start: currentPage, maxResults: AppConfig.aladinMaxResults))
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 guard let self else { return }
@@ -48,7 +48,7 @@ final class BookSearchViewModel: ObservableObject {
                 let newItems = resp.item ?? []
                 self.results.append(contentsOf: newItems)
 
-                if newItems.count < 30 { self.canLoadMore = false }
+                if newItems.count < AppConfig.aladinMaxResults { self.canLoadMore = false }
                 else { self.currentPage += 1 }
             }
             .store(in: &bag)
